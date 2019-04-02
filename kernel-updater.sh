@@ -7,15 +7,16 @@ set -o pipefail
 [ "$DEBUG" = "1" ] && set -x
 
 LOCALDIR="$(readlink -f "$(dirname "$0")")"
-CONF="$(readlink -f "$1")"
 
-[[ ! -r "$CONF" ]] && { echo "Please provide launcher configuration file"; exit 1; }
+if [ -e "$UPDATER_CONF" ]; then
+    # shellcheck source=/dev/null
+    source "$UPDATER_CONF"
+fi
 
-# shellcheck source=/dev/null
-source "$CONF"
+VARS='RELEASE BRANCH_linux_kernel GITHUB_TOKEN_FILE GIT_UPSTREAM GIT_BASEURL_UPSTREAM GIT_PREFIX_UPSTREAM GIT_FORK GIT_BASEURL_FORK GIT_PREFIX_FORK'
 
 # Check if necessary variables are defined in the environnement
-for var in RELEASE BRANCH_linux_kernel GITHUB_TOKEN_FILE GIT_UPSTREAM GIT_BASEURL_UPSTREAM GIT_PREFIX_UPSTREAM GIT_FORK GIT_BASEURL_FORK GIT_PREFIX_FORK
+for var in $VARS
 do
     if [ "x${!var}" = "x" ]; then
         echo "Please provide $var in env/conf: $CONF"
@@ -91,6 +92,14 @@ if [ "x$LATEST_KERNEL_VERSION" != "x" ]; then
     git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}linux-kernel"
     git push -u fork "$HEAD_BRANCH"
     popd
+
+    if [ "x$SIGN_KEY" != "x" ]; then
+       make sign-all COMPONENTS=linux-kernel SIGN_KEY="$SIGN_KEY"
+    fi
+
+    if [ "x$HOST" != "x" ] && [ "x$HOST_BASEDIR" != "x" ]; then
+        make update-repo-unstable COMPONENTS=linux-kernel HOST="$HOST" HOST_BASEDIR="$HOST_BASEDIR"
+    fi
 
     "$LOCALDIR/kernel-updater.py" --token "$GITHUB_TOKEN_FILE" --create-pullrequest --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}" --head "$GIT_FORK:$HEAD_BRANCH"
 else

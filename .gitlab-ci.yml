@@ -3,8 +3,8 @@ stages:
 
 master:
   stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=master DIST_DOM0=fc25 RELEASE=4.0 ./builder.sh builder.conf
+  script: DEBUG=1 BRANCH_linux_kernel=master DIST_DOM0=fc25 RELEASE=4.0 ./kernel-updater.sh
 
 stable-4.19:
   stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=stable-4.19 DIST_DOM0=fc25 RELEASE=4.0 ./builder.sh builder.conf
+  script: DEBUG=1 BRANCH_linux_kernel=stable-4.19 DIST_DOM0=fc25 RELEASE=4.0 ./kernel-updater.sh
