@@ -90,8 +90,8 @@ make get-sources
 
 if [ "$BRANCH_linux_kernel" == "master" ]; then
     FC_LATEST="$(curl -s -L https://dl.fedoraproject.org/pub/fedora/linux/releases | sed -e 's/<[^>]*>//g' | awk '{print $1}' | grep -o "[0-9][1-9]" | tail -1)"
-    FC_STABLE="$(dnf -q repoquery kernel --disablerepo=*modular* --releasever="$FC_LATEST" | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
-    FC_RAWHIDE="$(dnf -q repoquery kernel --disablerepo=*modular* --releasever=rawhide | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
+    FC_STABLE="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever="$FC_LATEST" | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
+    FC_RAWHIDE="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever=rawhide | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
 
     if distance_version "$FC_STABLE" "$LATEST_KERNEL_VERSION"; then
         ./get-fedora-latest-config "$FC_LATEST"
