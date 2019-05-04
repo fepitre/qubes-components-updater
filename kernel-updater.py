@@ -6,6 +6,7 @@ import requests
 import json
 
 from github import Github
+from packaging import version
 
 
 class KernelUpdaterClient(Github):
@@ -52,7 +53,8 @@ class KernelUpdaterClient(Github):
     def is_update_needed(self):
         version_qubes = self.get_version_qubes()
         version_upstream = self.get_version_upstream()
-        if (not self.is_autopr_present(version_upstream)) and (version_qubes < version_upstream):
+        if (not self.is_autopr_present(version_upstream)) and (
+                version.parse(version_qubes) < version.parse(version_upstream)):
             return version_upstream
 
     def create_pullrequest(self, base, head):
