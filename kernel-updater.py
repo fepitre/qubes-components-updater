@@ -29,14 +29,16 @@ class KernelUpdaterClient(Github):
         if 200 <= r.status_code < 300:
             content = json.loads(r.content.decode('utf-8'))
             if self.branch == 'master':
-                latest_upstream = content['latest_stable']['version']
+                releases = [rel['version'] for rel in content['releases'] if rel['moniker'] == 'stable']
             elif 'stable-' in self.branch:
                 branch_version = self.branch.split('-')[1]
                 releases = [rel['version'] for rel in content['releases'] if
                             rel['moniker'] == 'longterm' and rel['version'].startswith(branch_version)]
-                latest_upstream = releases[0]
             else:
                 print('Unknown tag/branch: %s' % self.branch)
+
+            if releases:
+                latest_upstream = releases[0]
         else:
             print('An error occurred while downloading "%s"' % url_releases)
 
