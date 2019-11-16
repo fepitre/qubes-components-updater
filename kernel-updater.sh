@@ -90,15 +90,15 @@ make get-sources
 
 if [ "$BRANCH_linux_kernel" == "master" ]; then
     FC_LATEST="$(curl -s -L https://dl.fedoraproject.org/pub/fedora/linux/releases | sed -e 's/<[^>]*>//g' | awk '{print $1}' | grep -o "[1-9][0-9]" | tail -1)"
-    FC_STABLE="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever="$FC_LATEST" | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
-    FC_RAWHIDE="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever=rawhide | grep -v "rc[0-9]*" | tail -1 | cut -d ':' -f2 | cut -d '-' -f1 || true)"
+    STABLE_KERNEL="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever="$FC_LATEST" | sort -V | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
+    RAWHIDE_KERNEL="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever=rawhide | grep -v "rc[0-9]*" | sort -V | tail -1 | cut -d ':' -f2 | cut -d '-' -f1 || true)"
 
-    if distance_version "$FC_STABLE" "$LATEST_KERNEL_VERSION"; then
+    if distance_version "$STABLE_KERNEL" "$LATEST_KERNEL_VERSION"; then
         ./get-fedora-latest-config "$FC_LATEST"
-        mv config-base-"$FC_STABLE" config-base
-    elif distance_version "$FC_RAWHIDE" "$LATEST_KERNEL_VERSION"; then
+        mv config-base-"$STABLE_KERNEL" config-base
+    elif distance_version "$RAWHIDE_KERNEL" "$LATEST_KERNEL_VERSION"; then
         ./get-fedora-latest-config rawhide
-        mv config-base-"$FC_RAWHIDE" config-base
+        mv config-base-"$RAWHIDE_KERNEL" config-base
     else
         echo "-> Cannot determine latest config for kernel ${LATEST_KERNEL_VERSION}. Use the current existing config..."
     fi
