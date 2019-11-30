@@ -59,7 +59,7 @@ distance_version() {
     [[ ${VER1[0]} -eq ${VER2[0]} ]] && [[ $((VER1[1] - VER2[1])) -le 1 ]] && [[ $((VER1[1] - VER2[1])) -ge 0 ]]
 }
 
-LATEST_KERNEL_VERSION="$("$LOCALDIR/kernel-updater.py" --token "$GITHUB_TOKEN_FILE" --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
+LATEST_KERNEL_VERSION="$(python3 "$LOCALDIR/kernel-updater.py" --token "$GITHUB_TOKEN_FILE" --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
 
 if [ "x$LATEST_KERNEL_VERSION" == "x" ]; then
     echo "-> Current kernel version in branch ${BRANCH_linux_kernel} is up to date"
