@@ -42,7 +42,7 @@ exit_launcher() {
     local exit_code=$?
 
     pushd "$BUILDERDIR"
-    make clean-chroot
+    make distclean
     popd
 
     if [ ${exit_code} -ge 1 ]; then
