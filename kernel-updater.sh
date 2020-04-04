@@ -79,7 +79,7 @@ if [ "x$BUILDERCONF" == "x" ];  then
 fi
 
 pushd "$BUILDERDIR"
-make get-sources-git GIT_BASEURL="${GIT_BASEURL_UPSTREAM}" GIT_PREFIX="${GIT_PREFIX_UPSTREAM}"
+make remount get-sources-git GIT_BASEURL="${GIT_BASEURL_UPSTREAM}" GIT_PREFIX="${GIT_PREFIX_UPSTREAM}"
 
 pushd "$BUILDERDIR/qubes-src/linux-kernel"
 HEAD_BRANCH="update-v$LATEST_KERNEL_VERSION"
