@@ -117,4 +117,4 @@ popd
 "$LOCALDIR/kernel-updater.py" --token "$GITHUB_TOKEN_FILE" --create-pullrequest --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}" --head "$GIT_FORK:$HEAD_BRANCH"
 
 # Sign kernel RPMs and update to repository
-make sign-all update-repo-unstable
+#make sign-all update-repo-unstable
