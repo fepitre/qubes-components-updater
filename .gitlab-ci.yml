@@ -1,3 +1,18 @@
+workflow:
+ rules:
+   - if: '$CI_PIPELINE_SOURCE == "push"'
+     when: never
+   - when: always
+
+variables:
+  DEBUG: 1
+
+.job:
+  tags:
+    - qubes-kernel-updater
+  stage: build
+  script: ./kernel-updater.sh
+
 stages:
   - prep
   - build
@@ -9,25 +24,21 @@ dependencies:
   script: pip3 install --user -r requirements.txt
 
 master:
-  tags:
-    - qubes-kernel-updater
-  stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=master DIST_DOM0=fc25 RELEASE=4.0 BUILDDIR=/home/user ./kernel-updater.sh
+  extends: .job
+  variables:
+    BRANCH_linux_kernel: master
 
 stable-5.4:
-  tags:
-    - qubes-kernel-updater
-  stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=stable-5.4 DIST_DOM0=fc25 RELEASE=4.0 BUILDDIR=/home/user ./kernel-updater.sh
+  extends: .job
+  variables:
+    BRANCH_linux_kernel: "stable-5.4"
 
 stable-4.19:
-  tags:
-    - qubes-kernel-updater
-  stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=stable-4.19 DIST_DOM0=fc25 RELEASE=4.0 BUILDDIR=/home/user ./kernel-updater.sh
+  extends: .job
+  variables:
+    BRANCH_linux_kernel: "stable-4.19"
 
 stable-4.14:
-  tags:
-    - qubes-kernel-updater
-  stage: build
-  script: DEBUG=1 BRANCH_linux_kernel=stable-4.14 DIST_DOM0=fc25 RELEASE=4.0 BUILDDIR=/home/user ./kernel-updater.sh
+  extends: .job
+  variables:
+    BRANCH_linux_kernel: "stable-4.14"

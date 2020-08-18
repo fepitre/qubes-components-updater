@@ -1,4 +1,6 @@
 argparse
 requests
-pygithub
 packaging
+pygithub
+pyjwt
+python-gitlab

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import sys
 import argparse
 import requests
@@ -61,20 +62,21 @@ class KernelUpdaterClient(Github):
                 return version_upstream
 
     def create_pullrequest(self, base, head):
-        # example of head: 'fepitre:v4.19.30'
-        parsed_head = head.split(':')
-        if len(parsed_head) == 2:
-            version = parsed_head[1].lstrip('update-v')
-        else:
-            print(
-                'An error occurred while parsing "repo:branch" from %s' % head)
-            sys.exit(1)
+        if not self.is_autopr_present(self.get_version_upstream()):
+            # example of head: 'fepitre:v4.19.30'
+            parsed_head = head.split(':')
+            if len(parsed_head) == 2:
+                version = parsed_head[1].lstrip('update-v')
+            else:
+                print(
+                    'An error occurred while parsing "repo:branch" from %s' % head)
+                sys.exit(1)
 
-        self.repo.create_pull(title="UPDATE: " + version,
-                              body="Update to kernel-" + version,
-                              base=base,
-                              head=head,
-                              maintainer_can_modify=True)
+            self.repo.create_pull(title="UPDATE: " + version,
+                                body="Update to kernel-" + version,
+                                base=base,
+                                head=head,
+                                maintainer_can_modify=True)
 
 
 def parse_args(argv):
@@ -83,7 +85,6 @@ def parse_args(argv):
     parser.add_argument('--check-update', required=False, action='store_true')
     parser.add_argument('--create-pullrequest', required=False,
                         action='store_true')
-    parser.add_argument('--token', required=False)
     parser.add_argument('--base', required=True)
     parser.add_argument('--head', required=False)
 
@@ -94,16 +95,7 @@ def parse_args(argv):
 
 def main(argv):
     args = parse_args(argv)
-    token = None
-
-    # Token is only needed for PR
-    if args.token:
-        try:
-            with open(args.token, 'r') as f:
-                token = f.read().replace('\n', '')
-        except IOError:
-            print(
-                "An error occurred while reading token file '%s'" % args.token)
+    token = os.environ.get('GITHUB_API_TOKEN', None)
 
     # example of args.base: 'fepitre:stable-4.19'
     parsed_base = args.base.split(':')
