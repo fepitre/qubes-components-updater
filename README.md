@@ -1,1 +1,1 @@
-# Qubes Linux Kernel Updater
+# Qubes Components Updater
