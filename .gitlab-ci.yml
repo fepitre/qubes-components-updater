@@ -7,33 +7,44 @@ workflow:
 variables:
   DEBUG: 1
 
-.job:
+default:
   tags:
-    - qubes-kernel-updater
-  stage: build
-  script: ./kernel-updater.sh
+    - qubes-components-updater
 
 stages:
   - prep
   - build
 
 dependencies:
-  tags:
-    - qubes-kernel-updater
   stage: prep
   script: pip3 install --user -r requirements.txt
 
+### kernel
+.kernel-job:
+  stage: build
+  script: ./kernel-updater.sh
+
 master:
-  extends: .job
+  extends: .kernel-job
   variables:
     BRANCH_linux_kernel: master
 
+stable-5.10:
+  extends: .kernel-job
+  variables:
+    BRANCH_linux_kernel: "stable-5.10"
+
 stable-5.4:
-  extends: .job
+  extends: .kernel-job
   variables:
     BRANCH_linux_kernel: "stable-5.4"
 
 stable-4.19:
-  extends: .job
+  extends: .kernel-job
   variables:
     BRANCH_linux_kernel: "stable-4.19"
+
+### pulseaudio-headers
+pulseaudio-headers:
+  stage: build
+  script: ./pulseaudio-updater.sh
