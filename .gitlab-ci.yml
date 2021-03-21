@@ -48,3 +48,8 @@ stable-4.19:
 pulseaudio-headers:
   stage: build
   script: ./pulseaudio-updater.sh
+
+### iso
+r4.1-iso:
+  stage: build
+  script: ./build-iso.sh

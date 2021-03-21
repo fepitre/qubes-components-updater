@@ -5,8 +5,8 @@ set -e
 set -o pipefail
 
 LOCALDIR="$(readlink -f "$(dirname "$0")")"
-BUILDDIR="$(mktemp -d -p /home/user)"
-TMPDIR="$BUILDDIR/gui-agent-linux"
+TMPDIR="$(mktemp -d -p /home/user)"
+BUILDDIR="$TMPDIR/gui-agent-linux"
 
 GIT_UPSTREAM='QubesOS'
 GIT_FORK='fepitre-bot'
@@ -30,7 +30,7 @@ done
 
 exit_launcher() {
     local exit_code=$?
-    sudo rm -rf "$BUILDDIR"
+    sudo rm -rf "$TMPDIR"
     if [ ${exit_code} -ge 1 ]; then
         echo "-> An error occurred during build. Manual update is required"
     fi
@@ -39,10 +39,10 @@ exit_launcher() {
 
 trap 'exit_launcher' 0 1 2 3 6 15
 
-git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}gui-agent-linux" "$TMPDIR"
-git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDDIR/builder-rpm"  # for keys only
+git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}gui-agent-linux" "$BUILDDIR"
+git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$TMPDIR/builder-rpm"  # for keys only
 
-cd "$TMPDIR"
+cd "$BUILDDIR"
 export DNF_OPTS="--setopt=reposdir=$LOCALDIR/repos"
 ./get-latest-pulsecore.sh
 
