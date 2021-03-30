@@ -39,8 +39,8 @@ exit_launcher() {
 
 trap 'exit_launcher' 0 1 2 3 6 15
 
-UPDATE_NEEDED="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
-if [ -n "$UPDATE_NEEDED" ]; then
+QUBES_VERSION_TO_UPDATE="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
+if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
     git clone -b "${BRANCH_linux_kernel}" "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}linux-kernel" "$KERNELDIR"
     git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDDIR/builder-rpm"  # for keys only
     cd "$KERNELDIR"
@@ -55,10 +55,20 @@ if [ -n "$UPDATE_NEEDED" ]; then
         git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}linux-kernel"
         git push -u fork "$HEAD_BRANCH"
 
+        # use local git for changelog
+        if [ ! -e ~/linux ]; then
+            echo "-> Cannot find linux git kernel repository."
+            exit 1
+        fi
+        git -C ~/linux pull --all
+        printf "[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
+        git -C ~/linux log --oneline "v${QUBES_VERSION_TO_UPDATE}..v${LATEST_KERNEL_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
+
         "$LOCALDIR/github-updater.py" \
             --create-pullrequest \
             --repo qubes-linux-kernel \
             --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}" \
-            --head "$GIT_FORK:$HEAD_BRANCH"
+            --head "$GIT_FORK:$HEAD_BRANCH" \
+            --changelog changelog
     fi
 fi

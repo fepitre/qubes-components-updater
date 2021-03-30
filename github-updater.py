@@ -75,9 +75,9 @@ class UpdaterClient(Github):
             if (not self.is_autopr_present()) \
                     and (version.parse(version_qubes) <
                          version.parse(version_upstream)):
-                return version_upstream
+                return version_qubes
 
-    def create_pullrequest(self, base, head, version=None):
+    def create_pullrequest(self, base, head, version=None, changelog=None):
         if not self.is_autopr_present(version):
             # example of head: 'fepitre:v4.19.30'
             parsed_head = head.split(':')
@@ -86,9 +86,12 @@ class UpdaterClient(Github):
             else:
                 raise ValueError(
                     f'An error occurred while parsing "repo:branch" from {head}')
-
+            if changelog and os.path.exists(changelog):
+                with open(changelog, 'r') as fd:
+                    changelog_content = fd.read()
+            body = f"Update to {parsed_version}\n\n{changelog_content}"
             pr = self.repo.create_pull(title=f"UPDATE: {parsed_version}",
-                                  body=f"Update to {parsed_version}",
+                                  body=body,
                                   base=base,
                                   head=head,
                                   maintainer_can_modify=True)
@@ -109,6 +112,7 @@ def parse_args(argv):
     parser.add_argument('--base', required=True)
     parser.add_argument('--head', required=False)
     parser.add_argument('--version', required=False)
+    parser.add_argument('--changelog', required=False)
 
     args = parser.parse_args(argv[1:])
 
@@ -136,9 +140,9 @@ def main(argv):
         if is_update_needed is not None:
             print(is_update_needed)
 
-    if args.create_pullrequest and args.base and args.head:
+    if args.create_pullrequest and args.base and args.head and args.changelog:
         try:
-            client.create_pullrequest(branch, args.head, args.version)
+            client.create_pullrequest(base=branch, head=args.head, version=args.version, changelog=args.changelog)
         except ValueError as e:
             print(str(e))
             return 1
