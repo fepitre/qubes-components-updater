@@ -90,6 +90,8 @@ class UpdaterClient(Github):
                 with open(changelog, 'r') as fd:
                     changelog_content = fd.read()
             body = f"Update to {parsed_version}\n\n{changelog_content}"
+            if len(body) >= 65536:
+                body = body[0:65533] + "..."
             pr = self.repo.create_pull(title=f"UPDATE: {parsed_version}",
                                   body=body,
                                   base=base,
