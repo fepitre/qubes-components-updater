@@ -6,6 +6,7 @@ workflow:
 
 variables:
   DEBUG: 1
+  FETCH_CMD: curl --proto '=https' --proto-redir '=https' --tlsv1.2 --http1.1 -sSfL -o
 
 default:
   tags:
