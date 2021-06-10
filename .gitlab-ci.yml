@@ -54,3 +54,10 @@ pulseaudio-headers:
 r4.1-iso:
   stage: build
   script: ./build-iso.sh
+
+r4.1-iso-kernel-latest:
+  stage: build
+  script: ./build-iso.sh
+  variables:
+    ISO_USE_KERNEL_LATEST: 1
+    ISO_FLAVOR: kernel-latest
