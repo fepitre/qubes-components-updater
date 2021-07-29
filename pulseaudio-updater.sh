@@ -44,7 +44,12 @@ git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$TMPDIR/b
 
 cd "$BUILDDIR"
 export DNF_OPTS="--setopt=reposdir=$LOCALDIR/repos"
-./get-latest-pulsecore.sh
+if [ -z "$LATEST_FEDORA_RELEASE" ]; then
+    LATEST_FEDORA_RELEASE="$(git ls-remote --heads https://src.fedoraproject.org/rpms/fedora-release | grep -Po "refs/heads/f[0-9][1-9]*" | sed 's#refs/heads/f##g' | sort -g | tail -1)"
+fi
+
+# We use 'rawhide' which is latest fedora release + 1
+LATEST_FEDORA_RELEASE=$((LATEST_FEDORA_RELEASE + 1)) ./get-latest-pulsecore.sh
 
 LATEST_PULSE_VERSION="$(git status --short | sed 's|.*pulse/pulsecore-\(.*\)/|\1|')"
 if [ -n "$LATEST_PULSE_VERSION" ]; then
