@@ -86,12 +86,13 @@ class UpdaterClient(Github):
             else:
                 raise ValueError(
                     f'An error occurred while parsing "repo:branch" from {head}')
+            body = ""
             if changelog and os.path.exists(changelog):
                 with open(changelog, 'r') as fd:
                     changelog_content = fd.read()
-            body = f"Update to {parsed_version}\n\n{changelog_content}"
-            if len(body) >= 65536:
-                body = body[0:65533] + "..."
+                body = f"Update to {parsed_version}\n\n{changelog_content}"
+                if len(body) >= 65536:
+                    body = body[0:65533] + "..."
             pr = self.repo.create_pull(title=f"UPDATE: {parsed_version}",
                                   body=body,
                                   base=base,
@@ -142,7 +143,7 @@ def main(argv):
         if is_update_needed is not None:
             print(is_update_needed)
 
-    if args.create_pullrequest and args.base and args.head and args.changelog:
+    if args.create_pullrequest and args.base and args.head:
         try:
             client.create_pullrequest(base=branch, head=args.head, version=args.version, changelog=args.changelog)
         except ValueError as e:
