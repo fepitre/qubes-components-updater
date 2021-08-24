@@ -44,7 +44,10 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
     git clone -b "${BRANCH_linux_kernel}" "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}linux-kernel" "$KERNELDIR"
     git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDDIR/builder-rpm"  # for keys only
     cd "$KERNELDIR"
-    make update-sources BRANCH="${BRANCH_linux_kernel}"
+    FC_LATEST="$(git ls-remote --heads https://src.fedoraproject.org/rpms/fedora-release | grep -Po "refs/heads/f[0-9][1-9]*" | sed 's#refs/heads/f##g' | sort -g | tail -1)"
+    if ! make update-sources BRANCH="${BRANCH_linux_kernel}" DIST="${FC_LATEST}"; then
+        make update-sources BRANCH="${BRANCH_linux_kernel}" DIST="$((FC_LATEST - 1))"
+    fi
     if [ -n "$(git diff version)" ]; then
         LATEST_KERNEL_VERSION="$(cat version)"
         HEAD_BRANCH="update-v$LATEST_KERNEL_VERSION"
