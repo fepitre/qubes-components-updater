@@ -30,6 +30,11 @@ master:
   variables:
     BRANCH_linux_kernel: master
 
+stable-5.15:
+  extends: .kernel-job
+  variables:
+    BRANCH_linux_kernel: "stable-5.15"
+
 stable-5.10:
   extends: .kernel-job
   variables:
