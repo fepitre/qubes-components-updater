@@ -45,11 +45,6 @@ stable-5.4:
   variables:
     BRANCH_linux_kernel: "stable-5.4"
 
-stable-4.19:
-  extends: .kernel-job
-  variables:
-    BRANCH_linux_kernel: "stable-4.19"
-
 ### pulseaudio-headers
 pulseaudio-headers:
   stage: build
