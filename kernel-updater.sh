@@ -60,8 +60,7 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
 
         # use local git for changelog
         if [ ! -e ~/linux ]; then
-            echo "-> Cannot find linux git kernel repository."
-            exit 1
+            git -C ~/ clone https://github.com/gregkh/linux
         fi
         git -C ~/linux pull --all
         printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
