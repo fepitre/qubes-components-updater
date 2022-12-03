@@ -7,6 +7,8 @@ LOCALDIR="$(readlink -f "$(dirname "$0")")"
 TMPDIR="$(mktemp -d -p /home/user)"
 BUILDERDIR="$TMPDIR/qubes-builder"
 
+RELEASE="${1:-4.1}"
+
 # Hide sensitive info
 [ "$DEBUG" = "1" ] && set -x
 
@@ -24,7 +26,7 @@ trap 'exit_launcher' 0 1 2 3 6 15
 
 git clone https://github.com/QubesOS/qubes-builder "$BUILDERDIR"
 make -C "$BUILDERDIR" get-sources BUILDERCONF= COMPONENTS="release-configs" GIT_URL_release_configs=https://github.com/qubesos/qubes-release-configs
-cp "$BUILDERDIR"/qubes-src/release-configs/R4.1/qubes-os-iso-full-online.conf "$BUILDERDIR"/builder.conf
+cp "$BUILDERDIR/qubes-src/release-configs/R${RELEASE}/qubes-os-iso-full-online.conf" "$BUILDERDIR"/builder.conf
 sed -i "s|iso-full-online.ks|travis-iso-full.ks|" "$BUILDERDIR"/builder.conf
 echo "USE_QUBES_REPO_TESTING=1" >> "$BUILDERDIR"/builder.conf
 make -C "$BUILDERDIR" get-sources
@@ -44,5 +46,5 @@ BUILD="$ISO_DATE"
 if [ -n "$ISO_FLAVOR" ]; then
     BUILD="${BUILD}-${ISO_FLAVOR}"
 fi
-BUILD="${BUILD}-4.1"
-python3 "$LOCALDIR/openqa-trigger-iso-test.py" "4.1" "${BUILD}" "${ISO_NAME}"
+BUILD="${BUILD}-${RELEASE}"
+python3 "$LOCALDIR/openqa-trigger-iso-test.py" "${RELEASE}" "${BUILD}" "${ISO_NAME}"
