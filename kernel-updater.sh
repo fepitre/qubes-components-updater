@@ -56,7 +56,7 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
         git add version rel config-base
         git commit -m "Update to kernel-$LATEST_KERNEL_VERSION"
         git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}linux-kernel"
-        git push -u fork "$HEAD_BRANCH"
+        git push -f -u fork "$HEAD_BRANCH"
 
         # use local git for changelog
         if [ ! -e ~/linux ]; then
