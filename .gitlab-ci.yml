@@ -18,7 +18,7 @@ stages:
 
 dependencies:
   stage: prep
-  script: pip3 install --user -r requirements.txt
+  script: sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab python3-openqa_client
 
 ### kernel
 .kernel-job:
