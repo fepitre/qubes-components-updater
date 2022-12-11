@@ -10,7 +10,9 @@ if [ -n "${ISO_FLAVOR}" ]; then
     BUILDERDIR="${BUILDERDIR}-${ISO_FLAVOR}"
 fi
 
-# Hide sensitive info
+ISO_VERSION="${RELEASE}-$(date +%Y%m%d)"
+export ISO_VERSION
+
 [ "$DEBUG" = "1" ] && set -x
 
 exit_launcher() {
