@@ -10,7 +10,7 @@ if [ -n "${ISO_FLAVOR}" ]; then
     BUILDERDIR="${BUILDERDIR}-${ISO_FLAVOR}"
 fi
 
-ISO_VERSION="${RELEASE}-$(date +%Y%m%d)"
+ISO_VERSION="${RELEASE}.$(date +%Y%m%d)"
 export ISO_VERSION
 
 [ "$DEBUG" = "1" ] && set -x
