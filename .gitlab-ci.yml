@@ -57,24 +57,8 @@ r4.1-build-iso:
   stage: build
   script: ./build-iso.sh
 
-r4.1-build-iso-kernel-latest:
-  stage: build
-  script: ./build-iso.sh
-  variables:
-    ISO_USE_KERNEL_LATEST: 1
-    ISO_FLAVOR: kernel-latest
-
 r4.1-upload-iso:
   stage: upload
   script: ./upload-iso.sh
   needs:
     - r4.1-build-iso
-
-r4.1-upload-iso-kernel-latest:
-  stage: upload
-  script: ./upload-iso.sh
-  variables:
-    ISO_USE_KERNEL_LATEST: 1
-    ISO_FLAVOR: kernel-latest
-  needs:
-    - r4.1-build-iso-kernel-latest
