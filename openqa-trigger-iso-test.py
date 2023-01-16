@@ -12,6 +12,5 @@ params = {
     'ARCH': 'x86_64',
     'BUILD': sys.argv[2],
     'ISO_URL': f'https://qubes.notset.fr/iso/{sys.argv[3]}',
-    'KERNEL_VERSION': "latest" if "kernel-latest" in sys.argv[2] else "stable"
 }
 print(client.openqa_request('POST', 'isos', params))
