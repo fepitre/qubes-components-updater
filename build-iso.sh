@@ -4,7 +4,11 @@ set -e
 set -o pipefail
 
 LOCALDIR="$(readlink -f "$(dirname "$0")")"
-RELEASE="${1:-4.1}"
+RELEASE="$1"
+if [ -z "$RELEASE" ]; then
+    echo "-> Please provide Qubes OS release."
+    exit 1
+fi
 BUILDERDIR="/home/user/iso/builder-${RELEASE}"
 if [ -n "${ISO_FLAVOR}" ]; then
     BUILDERDIR="${BUILDERDIR}-${ISO_FLAVOR}"
@@ -33,7 +37,6 @@ fi
 git clone https://github.com/QubesOS/qubes-builder "$BUILDERDIR"
 make -C "$BUILDERDIR" get-sources BUILDERCONF= COMPONENTS="release-configs" GIT_URL_release_configs=https://github.com/qubesos/qubes-release-configs
 cp "$BUILDERDIR/qubes-src/release-configs/R${RELEASE}/qubes-os-iso-full-online.conf" "$BUILDERDIR"/builder.conf
-sed -i "s|iso-full-online.ks|travis-iso-full.ks|" "$BUILDERDIR"/builder.conf
 echo "USE_QUBES_REPO_TESTING=1" >> "$BUILDERDIR"/builder.conf
 make -C "$BUILDERDIR" get-sources
 make -C "$BUILDERDIR" install-deps remount iso sign-iso VERBOSE=0

@@ -4,7 +4,11 @@ set -e
 set -o pipefail
 
 LOCALDIR="$(readlink -f "$(dirname "$0")")"
-RELEASE="${1:-4.1}"
+RELEASE="$1"
+if [ -z "$RELEASE" ]; then
+    echo "-> Please provide Qubes OS release."
+    exit 1
+fi
 BUILDERDIR="/home/user/iso/builder-${RELEASE}"
 if [ -n "${ISO_FLAVOR}" ]; then
     BUILDERDIR="${BUILDERDIR}-${ISO_FLAVOR}"

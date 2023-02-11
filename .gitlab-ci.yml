@@ -13,52 +13,65 @@ default:
     - qubes-components-updater
 
 stages:
-  - prep
   - build
   - upload
 
-dependencies:
-  stage: prep
-  script: sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab python3-openqa_client
+.component-job:
+  stage: build
+  rules:
+    - if: '$CI_RUN_COMPONENTS_JOBS == "1"'
+      when: always
+    - when: never
+
+.iso-job:
+  rules:
+    - if: '$CI_RUN_ISO_JOBS == "1"'
+      when: always
+    - when: never
 
 ### kernel
+
 .kernel-job:
-  stage: build
+  extends: .component-job
+  before_script: sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab python3-openqa_client
   script: ./kernel-updater.sh
 
-master:
+linux-main:
   extends: .kernel-job
   variables:
-    BRANCH_linux_kernel: master
+    BRANCH_linux_kernel: main
 
-stable-5.15:
+linux-5.15:
   extends: .kernel-job
   variables:
     BRANCH_linux_kernel: "stable-5.15"
 
-stable-5.10:
+linux-5.10:
   extends: .kernel-job
   variables:
     BRANCH_linux_kernel: "stable-5.10"
 
-stable-5.4:
+linux-5.4:
   extends: .kernel-job
   variables:
     BRANCH_linux_kernel: "stable-5.4"
 
 ### pulseaudio-headers
+
 pulseaudio-headers:
-  stage: build
+  extends: .component-job
   script: ./pulseaudio-updater.sh
 
 ### iso
 
-r4.1-build-iso:
+build-iso:
+  extends: .iso-job
   stage: build
   script: ./build-iso.sh
 
-r4.1-upload-iso:
+upload-iso:
+  extends: .iso-job
   stage: upload
   script: ./upload-iso.sh
   needs:
-    - r4.1-build-iso
+    - build-iso
