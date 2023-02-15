@@ -67,11 +67,11 @@ pulseaudio-headers:
 build-iso:
   extends: .iso-job
   stage: build
-  script: ./build-iso.sh
+  script: ./build-iso.sh "$RELEASE"
 
 upload-iso:
   extends: .iso-job
   stage: upload
-  script: ./upload-iso.sh
+  script: ./upload-iso.sh "$RELEASE"
   needs:
     - build-iso
