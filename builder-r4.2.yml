@@ -33,4 +33,3 @@ stages:
 iso:
   kickstart: conf/iso-online-testing.ks
 
-artifacts-dir: /mnt/removable/artifacts-weekly

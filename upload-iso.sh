@@ -24,7 +24,7 @@ fi
 if [ "${RELEASE}" == "4.2" ]; then
     cd "$BUILDERDIR"
     ARTIFACTS_DIR="$(./qb config get-var artifacts-dir 2>/dev/null)"
-    if [ -z "${ARTIFACTS_DIR}" ]; then
+    if [ -z "${ARTIFACTS_DIR}" ] || [ ! -d "${ARTIFACTS_DIR}" ]; then
         echo "ERROR: Cannot find artifacts directory."
         exit 1
     fi
