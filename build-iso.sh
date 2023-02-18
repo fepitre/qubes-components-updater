@@ -45,9 +45,8 @@ if [ "${RELEASE}" == "4.2" ]; then
     # Start the build
     cd "${BUILDERDIR}"
     cp "${LOCALDIR}"/builder-r4.2.yml "$BUILDERDIR"/builder.yml
-    ARTIFACTS_DIR="$(./qb config get-var artifacts-dir 2>/dev/null)"
     ./qb package fetch
-    ./qb --log-file "${ARTIFACTS_DIR}"/logs/installer-qubes-os-iso-fc37.log -o use-qubes-repo:testing=true -o sign-key:iso=1C8714D640F30457EC953050656946BA873DDEC1 -o iso:version="${ISO_VERSION}" installer init-cache prep --iso-timestamp "${ISO_TIMESTAMP}" build sign
+    ./qb --log-file "${BUILDERDIR}"/installer-qubes-os-iso-fc37.log -o use-qubes-repo:testing=true -o sign-key:iso=1C8714D640F30457EC953050656946BA873DDEC1 -o iso:version="${ISO_VERSION}" installer init-cache prep --iso-timestamp "${ISO_TIMESTAMP}" build sign
 elif [ "${RELEASE}" == "4.1" ]; then
     # Clone and verify qubes-builder source
     "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/QubesOS/qubes-builder"

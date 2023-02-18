@@ -50,7 +50,7 @@ trap 'exit_launcher' 0 1 2 3 6 15
 # We must not have more than one ISO but prevent any issue.
 if [ "${RELEASE}" == "4.2" ]; then
     ISO="$(find "$ARTIFACTS_DIR"/iso -name "*.iso" | head -1)"
-    ISO_LOG="$ARTIFACTS_DIR"/logs/installer-qubes-os-iso-fc37.log
+    ISO_LOG="$BUILDERDIR"/installer-qubes-os-iso-fc37.log
     if [ -n "$ISO_FLAVOR" ]; then
         ISO_TIMESTAMP="$(cat "$ARTIFACTS_DIR/installer/latest_fc37_iso_${ISO_FLAVOR}_timestamp" 2>/dev/null)"
     else
