@@ -38,7 +38,7 @@ if [ -d "${BUILDERDIR}" ]; then
 fi
 
 if [ "${RELEASE}" == "4.2" ]; then
-    "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/QubesOS/qubes-builderv2"
+    "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/fepitre/qubes-builderv2" "installer-timestamp"
     cd "${BUILDERDIR}"
     cp "${LOCALDIR}"/builder-r4.2.yml "$BUILDERDIR"/builder.yml
     ARTIFACTS_DIR="$(./qb config get-var artifacts-dir 2>/dev/null)"
