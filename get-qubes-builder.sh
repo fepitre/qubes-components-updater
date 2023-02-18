@@ -34,6 +34,7 @@ set -e
 
 BUILDER_DIR="$1"
 BUILDER_URL="$2"
+BUILDER_BRANCH="${3:-main}"
 
 if [ -z "${BUILDER_DIR}" ]; then
     echo "ERROR: Please provide builder directory destination."
@@ -45,7 +46,7 @@ if [ -z "${BUILDER_URL}" ]; then
     exit 1
 fi
 
-git clone "$BUILDER_URL" "$BUILDER_DIR"
+git clone -b "${BUILDER_BRANCH}" "$BUILDER_URL" "$BUILDER_DIR"
 
 cd "$BUILDER_DIR" || {
     echo "ERROR: Invalid builder directory."
