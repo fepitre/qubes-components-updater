@@ -52,18 +52,15 @@ if [ "${RELEASE}" == "4.2" ]; then
     ISO="$(find "$ARTIFACTS_DIR"/iso -name "*.iso" | head -1)"
     ISO_LOG="$ARTIFACTS_DIR"/logs/installer-qubes-os-iso-fc37.log
     if [ -n "$ISO_FLAVOR" ]; then
-        ISO_DATE="$(cat "$ARTIFACTS_DIR/installer/latest_fc37_iso_${ISO_FLAVOR}_timestamp" 2>/dev/null)"
+        ISO_TIMESTAMP="$(cat "$ARTIFACTS_DIR/installer/latest_fc37_iso_${ISO_FLAVOR}_timestamp" 2>/dev/null)"
     else
-        ISO_DATE="$(cat "$ARTIFACTS_DIR"/installer/latest_fc37_iso_timestamp 2>/dev/null)"
+        ISO_TIMESTAMP="$(cat "$ARTIFACTS_DIR"/installer/latest_fc37_iso_timestamp 2>/dev/null)"
     fi
-    # Upload ISO
-    cd "$BUILDERDIR" && ./qb installer upload
+    ISO_VERSION="${RELEASE}.${ISO_TIMESTAMP}"
 elif [ "${RELEASE}" == "4.1" ]; then
     ISO="$(find "$BUILDERDIR"/iso -name "*.iso" | head -1)"
-    ISO_DATE="$(cat "$BUILDERDIR"/qubes-src/installer-qubes-os/build/ISO/qubes-x86_64/iso/build_latest 2>/dev/null)"
+    ISO_TIMESTAMP="$(cat "$BUILDERDIR"/qubes-src/installer-qubes-os/build/ISO/qubes-x86_64/iso/build_latest 2>/dev/null)"
     ISO_LOG="$BUILDERDIR"/build-logs/installer-qubes-os-iso-fc32.log
-    # Upload ISO
-    make -C "$BUILDERDIR" upload-iso
 fi
 
 if [ -z "${ISO}" ]; then
@@ -71,19 +68,28 @@ if [ -z "${ISO}" ]; then
     exit 1
 fi
 
-if [ -z "${ISO_DATE}" ]; then
-    echo "ERROR: Cannot determine ISO_DATE."
+if [ -z "${ISO_TIMESTAMP}" ]; then
+    echo "ERROR: Cannot determine ISO_TIMESTAMP."
     exit 1
+fi
+
+# Upload ISO
+if [ "${RELEASE}" == "4.2" ]; then
+    cd "$BUILDERDIR" && ./qb -o iso:version="${ISO_VERSION}" installer upload
+elif [ "${RELEASE}" == "4.1" ]; then
+    make -C "$BUILDERDIR" upload-iso
 fi
 
 ISO_NAME="$(basename "$ISO")"
 ISO_BASE="${ISO_NAME%%.iso}"
 
 # Upload log
-rsync "${ISO_LOG}" "$HOST:$HOST_ISO_BASEDIR/$ISO_BASE$ISO_SUFFIX.log"
+if [ -n "${HOST}" ] && [ -n "${HOST_ISO_BASEDIR}" ] && [ -n "${ISO_BASE}" ]; then
+    rsync "${ISO_LOG}" "$HOST:$HOST_ISO_BASEDIR/$ISO_BASE$ISO_SUFFIX.log"
+fi
 
 # Trigger openQA test
-BUILD="$ISO_DATE"
+BUILD="$ISO_TIMESTAMP"
 if [ -n "$ISO_FLAVOR" ]; then
     BUILD="${BUILD}-${ISO_FLAVOR}"
 fi
