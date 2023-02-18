@@ -38,14 +38,20 @@ if [ -d "${BUILDERDIR}" ]; then
 fi
 
 if [ "${RELEASE}" == "4.2" ]; then
+    # Clone and verify qubes-builderv2 source
     "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/fepitre/qubes-builderv2" "installer-timestamp"
+    # Generate docker from scratch
+    "${BUILDERDIR}"/tools/generate-container-image.sh docker fedora-37-x86_64
+    # Start the build
     cd "${BUILDERDIR}"
     cp "${LOCALDIR}"/builder-r4.2.yml "$BUILDERDIR"/builder.yml
     ARTIFACTS_DIR="$(./qb config get-var artifacts-dir 2>/dev/null)"
     ./qb package fetch
     ./qb --log-file "${ARTIFACTS_DIR}"/logs/installer-qubes-os-iso-fc37.log -o use-qubes-repo:testing=true -o sign-key:iso=1C8714D640F30457EC953050656946BA873DDEC1 -o iso:version="${ISO_VERSION}" installer init-cache prep --iso-timestamp "${ISO_TIMESTAMP}" build sign
 elif [ "${RELEASE}" == "4.1" ]; then
+    # Clone and verify qubes-builder source
     "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/QubesOS/qubes-builder"
+    # Start the build
     make -C "$BUILDERDIR" get-sources BUILDERCONF= COMPONENTS="release-configs" GIT_URL_release_configs=https://github.com/qubesos/qubes-release-configs
     cp "$BUILDERDIR/qubes-src/release-configs/R${RELEASE}/qubes-os-iso-full-online.conf" "$BUILDERDIR"/builder.conf
     echo "USE_QUBES_REPO_TESTING=1" >> "$BUILDERDIR"/builder.conf
