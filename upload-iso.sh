@@ -30,6 +30,12 @@ if [ "${RELEASE}" == "4.2" ]; then
     fi
 fi
 
+
+if [ -z "${HOST}" ] && [ -z "${HOST_ISO_BASEDIR}" ]; then
+    echo "ERROR: Cannot find HOST and HOST_ISO_BASEDIR."
+    exit 1
+fi
+
 exit_launcher() {
     local exit_code=$?
 #    if [ ${exit_code} -eq 0 ]; then
@@ -75,7 +81,7 @@ fi
 
 # Upload ISO
 if [ "${RELEASE}" == "4.2" ]; then
-    cd "$BUILDERDIR" && ./qb -o iso:version="${ISO_VERSION}" installer upload
+    cd "$BUILDERDIR" && ./qb -o iso:version="${ISO_VERSION}" -o repository-upload-remote-host:iso="$HOST:$HOST_ISO_BASEDIR/" installer upload
 elif [ "${RELEASE}" == "4.1" ]; then
     make -C "$BUILDERDIR" upload-iso
 fi
@@ -84,9 +90,7 @@ ISO_NAME="$(basename "$ISO")"
 ISO_BASE="${ISO_NAME%%.iso}"
 
 # Upload log
-if [ -n "${HOST}" ] && [ -n "${HOST_ISO_BASEDIR}" ] && [ -n "${ISO_BASE}" ]; then
-    rsync "${ISO_LOG}" "$HOST:$HOST_ISO_BASEDIR/$ISO_BASE$ISO_SUFFIX.log"
-fi
+rsync "${ISO_LOG}" "$HOST:$HOST_ISO_BASEDIR/$ISO_BASE$ISO_SUFFIX.log"
 
 # Trigger openQA test
 BUILD="$ISO_TIMESTAMP"
