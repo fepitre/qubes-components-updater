@@ -24,7 +24,7 @@ stages:
     - when: never
 
 .iso-job:
-  before_script: sudo dnf install python3-packaging createrepo_c devscripts gpg qubes-gpg-split python3-pyyaml rpm docker python3-docker podman python3-podman reprepro python3-pathspec rpm-sign mktorrent openssl tree mock
+  before_script: sudo dnf install -y python3-requests python3-pygithub python3-jwt python3-gitlab python3-openqa_client python3-packaging createrepo_c devscripts gpg qubes-gpg-split python3-pyyaml rpm docker python3-docker podman python3-podman reprepro python3-pathspec rpm-sign mktorrent openssl tree mock
   rules:
     - if: '$CI_RUN_ISO_JOBS == "1"'
       when: always
@@ -34,7 +34,7 @@ stages:
 
 .kernel-job:
   extends: .component-job
-  before_script: sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab python3-openqa_client
+  before_script: sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab
   script: ./kernel-updater.sh
 
 linux-main:
