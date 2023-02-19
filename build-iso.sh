@@ -39,7 +39,7 @@ fi
 
 if [ "${RELEASE}" == "4.2" ]; then
     # Clone and verify qubes-builderv2 source
-    "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/fepitre/qubes-builderv2" "installer-timestamp"
+    "${LOCALDIR}"/get-qubes-builder.sh "${BUILDERDIR}" "https://github.com/QubesOS/qubes-builderv2"
     # Generate docker from scratch
     "${BUILDERDIR}"/tools/generate-container-image.sh docker fedora-37-x86_64
     # Start the build
