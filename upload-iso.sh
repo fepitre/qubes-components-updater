@@ -97,5 +97,7 @@ BUILD="$ISO_TIMESTAMP"
 if [ -n "$ISO_FLAVOR" ]; then
     BUILD="${BUILD}-${ISO_FLAVOR}"
 fi
-BUILD="${BUILD}-${RELEASE}"
+if [ "${RELEASE}" == "4.2" ]; then
+    BUILD="${RELEASE}.${BUILD}"
+fi
 python3 "$LOCALDIR/openqa-trigger-iso-test.py" "${RELEASE}" "${BUILD}" "${ISO_NAME}"
