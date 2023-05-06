@@ -65,7 +65,8 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
             git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         fi
         git -C ~/linux pull --all
-        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
+#        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
+        printf "<details>\n\nChanges since previous version:\n" > changelog
         git -C ~/linux log --oneline "v${QUBES_VERSION_TO_UPDATE}..v${LATEST_KERNEL_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
         printf "\n\n</details>" >> changelog
 
