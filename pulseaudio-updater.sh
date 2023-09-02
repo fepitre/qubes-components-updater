@@ -57,8 +57,8 @@ if [ -n "$LATEST_PULSE_VERSION" ]; then
     git checkout -b "$HEAD_BRANCH"
     export LATEST_PULSE_VERSION
     sed -i "s|pulseaudio-libs-devel <= .*$|pulseaudio-libs-devel <= ${LATEST_PULSE_VERSION}|" rpm_spec/gui-agent.spec.in
-    sed -i "s|'pulseaudio<.*'|'pulseaudio<=${LATEST_PULSE_VERSION}'|g" archlinux/PKGBUILD
-    git add pulse rpm_spec/gui-agent.spec.in archlinux/PKGBUILD
+    sed -i "s|'pulseaudio<.*'|'pulseaudio<=${LATEST_PULSE_VERSION}'|g" archlinux/PKGBUILD.in
+    git add pulse rpm_spec/gui-agent.spec.in archlinux/PKGBUILD.in
     git commit -m "Add pulseaudio-$LATEST_PULSE_VERSION headers"
     git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}gui-agent-linux"
     git push -u fork "$HEAD_BRANCH"
