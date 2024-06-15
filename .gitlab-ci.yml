@@ -13,6 +13,7 @@ default:
     - qubes-components-updater
 
 stages:
+  - prep
   - build
   - upload
 
@@ -33,6 +34,7 @@ stages:
 ### kernel
 
 linux-clone:
+  stage: prep
   artifacts:
     paths:
       - linux.tar.xz
