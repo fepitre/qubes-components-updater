@@ -61,9 +61,8 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
         # use local git for changelog
         if [ ! -e ~/linux ]; then
             git -C ~/ clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
-        else
-            git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         fi
+        git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         git -C ~/linux pull --all
 #        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
         printf "<details>\n\nChanges since previous version:\n" > changelog
