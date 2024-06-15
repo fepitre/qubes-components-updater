@@ -46,7 +46,6 @@ stages:
 .kernel-job:
   extends: .component-job
   before_script:
-    - tar -C ~/ -xf $CI_PROJECT_DIR/linux.tar.xz
     - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab
   script: ./kernel-updater.sh
 #  needs:
