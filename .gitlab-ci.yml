@@ -33,15 +33,15 @@ stages:
 
 ### kernel
 
-linux-clone:
-  stage: prep
-  artifacts:
-    paths:
-      - linux.tar.xz
-  script:
-    - git -C ~/ clone --depth=250 --no-single-branch https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
-    - tar Jcf linux.tar.xz linux
-    - mv linux.tar.xz $CI_PROJECT_DIR/
+#linux-clone:
+#  stage: prep
+#  artifacts:
+#    paths:
+#      - linux.tar.xz
+#  script:
+#    - git -C ~/ clone --depth=250 --no-single-branch https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+#    - tar Jcf linux.tar.xz linux
+#    - mv linux.tar.xz $CI_PROJECT_DIR/
 
 .kernel-job:
   extends: .component-job
@@ -49,8 +49,8 @@ linux-clone:
     - tar -C ~/ -xf $CI_PROJECT_DIR/linux.tar.xz
     - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab
   script: ./kernel-updater.sh
-  needs:
-    - linux-clone
+#  needs:
+#    - linux-clone
 
 linux-main:
   extends: .kernel-job
