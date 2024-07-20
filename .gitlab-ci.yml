@@ -24,13 +24,6 @@ stages:
       when: always
     - when: never
 
-.iso-job:
-  before_script: sudo dnf install -y python3-requests python3-pygithub python3-jwt python3-gitlab python3-openqa_client python3-packaging createrepo_c devscripts gpg qubes-gpg-split python3-pyyaml rpm docker python3-docker podman python3-podman reprepro python3-pathspec rpm-sign mktorrent openssl tree mock
-  rules:
-    - if: '$CI_RUN_ISO_JOBS == "1"'
-      when: always
-    - when: never
-
 ### kernel
 
 #linux-clone:
@@ -46,7 +39,7 @@ stages:
 .kernel-job:
   extends: .component-job
   before_script:
-    - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab
+    - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab bison flex
   script: ./kernel-updater.sh
 #  needs:
 #    - linux-clone
@@ -81,19 +74,3 @@ linux-5.10:
 pulseaudio-headers:
   extends: .component-job
   script: ./pulseaudio-updater.sh
-
-### iso
-
-build-iso:
-  extends: .iso-job
-  stage: build
-  script:
-    - ./build-iso.sh "$RELEASE"
-    - ./upload-iso.sh "$RELEASE"
-
-#upload-iso:
-#  extends: .iso-job
-#  stage: upload
-#  script: ./upload-iso.sh "$RELEASE"
-#  needs:
-#    - build-iso
