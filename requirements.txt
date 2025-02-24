@@ -4,4 +4,3 @@ packaging
 pygithub
 pyjwt
 python-gitlab
-openqa_client

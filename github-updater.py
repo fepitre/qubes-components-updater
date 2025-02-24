@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 
+import argparse
+import json
 import os
 import sys
-import argparse
-import requests
-import json
-import subprocess
 
+import requests
 from github import Github
 from packaging import version
 from packaging.version import parse as parse_version
@@ -23,34 +22,42 @@ class UpdaterClient(Github):
     def get_version_qubes(self):
         qubes_version = None
         if self.repo.name == "qubes-gui-agent-linux":
-            fnames = [f.name.replace('pulsecore-', '')
-                      for f in self.repo.get_contents('pulse', ref=self.branch)
-                      if f.name.startswith('pulsecore-')]
+            fnames = [
+                f.name.replace("pulsecore-", "")
+                for f in self.repo.get_contents("pulse", ref=self.branch)
+                if f.name.startswith("pulsecore-")
+            ]
             fnames = sorted(fnames, key=parse_version, reverse=True)
             if fnames:
                 qubes_version = fnames[0]
         else:
-            content = self.repo.get_contents('version', ref=self.branch)
-            qubes_version = content.decoded_content.decode('utf8').strip('\n')
+            content = self.repo.get_contents("version", ref=self.branch)
+            qubes_version = content.decoded_content.decode("utf8").strip("\n")
         return qubes_version
 
     def get_version_upstream(self):
         latest_upstream = None
         if self.repo.name == "qubes-linux-kernel":
-            url_releases = 'https://www.kernel.org/releases.json'
+            url_releases = "https://www.kernel.org/releases.json"
             r = requests.get(url_releases)
             latest_upstream = None
             if 200 <= r.status_code < 300:
-                content = json.loads(r.content.decode('utf-8'))
-                releases = [rel['version'] for rel in content['releases'] if
-                            rel['moniker'] in ('stable', 'longterm')]
+                content = json.loads(r.content.decode("utf-8"))
+                releases = [
+                    rel["version"]
+                    for rel in content["releases"]
+                    if rel["moniker"] in ("stable", "longterm")
+                ]
 
                 releases.sort(key=parse_version, reverse=True)
 
-                if 'stable-' in self.branch:
-                    branch_version = self.branch.split('-')[1]
-                    releases = [rel for rel in releases if
-                                rel.startswith(branch_version)]
+                if "stable-" in self.branch:
+                    branch_version = self.branch.split("-")[1]
+                    releases = [
+                        rel
+                        for rel in releases
+                        if rel.startswith(branch_version + ".")
+                    ]
 
                 latest_upstream = releases[0]
             else:
@@ -63,7 +70,7 @@ class UpdaterClient(Github):
         if not version:
             version = self.get_version_upstream()
         for pr in list(self.repo.get_pulls()):
-            if f'UPDATE: {version}' in pr.title:
+            if f"UPDATE: {version}" in pr.title:
                 present = True
                 break
         return present
@@ -72,50 +79,55 @@ class UpdaterClient(Github):
         version_qubes = self.get_version_qubes()
         version_upstream = self.get_version_upstream()
         if version_qubes and version_upstream:
-            if (not self.is_autopr_present()) \
-                    and (version.parse(version_qubes) <
-                         version.parse(version_upstream)):
+            if (not self.is_autopr_present()) and (
+                version.parse(version_qubes) < version.parse(version_upstream)
+            ):
                 return version_qubes
 
     def create_pullrequest(self, base, head, version=None, changelog=None):
         if not self.is_autopr_present(version):
             # example of head: 'fepitre:v4.19.30'
-            parsed_head = head.split(':')
+            parsed_head = head.split(":")
             if len(parsed_head) == 2:
-                parsed_version = parsed_head[1].lstrip('update-v')
+                parsed_version = parsed_head[1].lstrip("update-v")
             else:
                 raise ValueError(
-                    f'An error occurred while parsing "repo:branch" from {head}')
+                    f'An error occurred while parsing "repo:branch" from {head}'
+                )
             body = ""
             if changelog and os.path.exists(changelog):
-                with open(changelog, 'r') as fd:
+                with open(changelog, "r") as fd:
                     changelog_content = fd.read()
                 body = f"Update to {parsed_version}\n\n{changelog_content}"
                 if len(body) >= 65536:
                     body = body[0:65533] + "..."
-            pr = self.repo.create_pull(title=f"UPDATE: {parsed_version}",
-                                  body=body,
-                                  base=base,
-                                  head=head,
-                                  maintainer_can_modify=True)
+            pr = self.repo.create_pull(
+                title=f"UPDATE: {parsed_version}",
+                body=body,
+                base=base,
+                head=head,
+                maintainer_can_modify=True,
+            )
             if not pr:
-                raise ValueError(f'An error occurred while creating PR for {head}')
+                raise ValueError(
+                    f"An error occurred while creating PR for {head}"
+                )
         else:
-            print(f'Pull request already exists!')
+            print(f"Pull request already exists!")
 
 
 def parse_args(argv):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--repo')
-    parser.add_argument('--check-update',
-                        required=False, action='store_true')
-    parser.add_argument('--create-pullrequest',
-                        required=False, action='store_true')
-    parser.add_argument('--base', required=True)
-    parser.add_argument('--head', required=False)
-    parser.add_argument('--version', required=False)
-    parser.add_argument('--changelog', required=False)
+    parser.add_argument("--repo")
+    parser.add_argument("--check-update", required=False, action="store_true")
+    parser.add_argument(
+        "--create-pullrequest", required=False, action="store_true"
+    )
+    parser.add_argument("--base", required=True)
+    parser.add_argument("--head", required=False)
+    parser.add_argument("--version", required=False)
+    parser.add_argument("--changelog", required=False)
 
     args = parser.parse_args(argv[1:])
 
@@ -124,10 +136,10 @@ def parse_args(argv):
 
 def main(argv):
     args = parse_args(argv)
-    token = os.environ.get('GITHUB_API_TOKEN', None)
+    token = os.environ.get("GITHUB_API_TOKEN", None)
 
     # example of args.base: 'fepitre:stable-4.19'
-    parsed_base = args.base.split(':')
+    parsed_base = args.base.split(":")
     if len(parsed_base) == 2:
         account = parsed_base[0]
         branch = parsed_base[1]
@@ -136,7 +148,8 @@ def main(argv):
         return 1
 
     client = UpdaterClient(
-        account=account, repo=args.repo, branch=branch, token=token)
+        account=account, repo=args.repo, branch=branch, token=token
+    )
 
     if args.check_update:
         is_update_needed = client.is_update_needed()
@@ -145,12 +158,17 @@ def main(argv):
 
     if args.create_pullrequest and args.base and args.head:
         try:
-            client.create_pullrequest(base=branch, head=args.head, version=args.version, changelog=args.changelog)
+            client.create_pullrequest(
+                base=branch,
+                head=args.head,
+                version=args.version,
+                changelog=args.changelog,
+            )
         except ValueError as e:
             print(str(e))
             return 1
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv))
