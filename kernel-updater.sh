@@ -6,8 +6,6 @@ set -o pipefail
 
 LOCALDIR="$(readlink -f "$(dirname "$0")")"
 BUILDDIR="$(mktemp -d -p /home/user)"
-KERNELDIR="$BUILDDIR/linux-kernel-${BRANCH_linux_kernel}"
-BUILDERRPMDIR="$BUILDDIR/builder-rpm"
 
 GIT_UPSTREAM='QubesOS'
 GIT_FORK='fepitre-bot'
@@ -20,24 +18,20 @@ VARS='BRANCH_linux_kernel GITHUB_API_TOKEN'
 
 # Check if necessary variables are defined in the environment
 for var in $VARS; do
-    if [ "x${!var}" = "x" ]; then
+    if [ -z "${!var}" ]; then
         echo "Please provide $var in env"
         exit 1
     fi
 done
+
+KERNELDIR="$BUILDDIR/linux-kernel-${BRANCH_linux_kernel}"
+BUILDERRPMDIR="$BUILDDIR/builder-rpm"
 
 # Filter allowed branches
 if [[ ! "${BRANCH_linux_kernel}" =~ ^stable-[0-9]+\.[0-9]+$ ]] && [ "${BRANCH_linux_kernel}" != "main" ]; then
     echo "Cannot determine kernel branch to use."
     exit 1
 fi
-
-distance_version() {
-    read -ra VER1 <<<"$(echo "$1" | tr '.' ' ')"
-    read -ra VER2 <<<"$(echo "$2" | tr '.' ' ')"
-
-    [[ ${VER1[0]} -eq ${VER2[0]} ]] && [[ $((VER1[1] - VER2[1])) -le 1 ]] && [[ $((VER1[1] - VER2[1])) -ge 0 ]]
-}
 
 # Hide sensitive info
 [ "$DEBUG" = "1" ] && set -x
@@ -55,8 +49,6 @@ trap 'exit_launcher' 0 1 2 3 6 15
 
 QUBES_VERSION_TO_UPDATE="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
 if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
-    FC_LATEST="$(git ls-remote --heads https://src.fedoraproject.org/rpms/fedora-release | grep -Po "refs/heads/f[0-9][1-9]*" | sed 's#refs/heads/f##g' | sort -g | tail -1)"
-
     git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDERRPMDIR"
     git clone -b "${BRANCH_linux_kernel}" "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}linux-kernel" "$KERNELDIR"
     cd "$KERNELDIR"
@@ -64,24 +56,12 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
     echo "$QUBES_VERSION_TO_UPDATE" > version
     make get-sources
 
-    STABLE_KERNEL="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever="$FC_LATEST" | sort -V | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
+    get_config_opts=("--keysdir=$BUILDERRPMDIR/keys" "--kerneldir=$KERNELDIR")
     if [ "$BRANCH" == "main" ]; then
-        TESTING_KERNEL="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --enablerepo=updates-testing --releasever="$FC_LATEST" | sort -V | tail -1 | cut -d ':' -f2 | cut -d '-' -f1)"
-        RAWHIDE_KERNEL="$(dnf -q repoquery kernel --disablerepo=* --enablerepo=fedora --enablerepo=updates --releasever=rawhide | grep -v "rc[0-9]*" | sort -V | tail -1 | cut -d ':' -f2 | cut -d '-' -f1 || true)"
+        get_config_opts+=("--include-testing")
     fi
 
-    if [ "$BRANCH" == "main" ] && { distance_version "$TESTING_KERNEL" "$QUBES_VERSION_TO_UPDATE"; }; then
-        "$KERNELDIR/get-fedora-latest-config" --releasever "$FC_LATEST" --include-testing
-        mv config-base-"$TESTING_KERNEL" config-base
-    elif [ "$BRANCH" == "main" ] && { distance_version "$RAWHIDE_KERNEL" "$QUBES_VERSION_TO_UPDATE"; }; then
-        "$KERNELDIR/get-fedora-latest-config" --releasever rawhide
-        mv config-base-"$RAWHIDE_KERNEL" config-base
-    elif distance_version "$STABLE_KERNEL" "$QUBES_VERSION_TO_UPDATE"; then
-        "$KERNELDIR/get-fedora-latest-config" --releasever "$FC_LATEST"
-        mv config-base-"$STABLE_KERNEL" config-base
-    else
-        echo "Cannot determine latest config for kernel ${LATEST_KERNEL_VERSION}. Use the current existing config..."
-    fi
+    "$LOCALDIR/get-fedora-latest-config.py" "${get_config_opts[@]}"
 
     if [ -n "$(git -C "$KERNELDIR" diff version)" ]; then
         LATEST_KERNEL_VERSION="$(cat version)"
