@@ -49,6 +49,11 @@ linux-main:
   variables:
     BRANCH_linux_kernel: main
 
+linux-6.12:
+  extends: .kernel-job
+  variables:
+    BRANCH_linux_kernel: "stable-6.12"
+
 linux-6.6:
   extends: .kernel-job
   variables:

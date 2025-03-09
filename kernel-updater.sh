@@ -71,19 +71,19 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
     fi
 
     if [ "$BRANCH" == "main" ] && { distance_version "$TESTING_KERNEL" "$QUBES_VERSION_TO_UPDATE"; }; then
-        "$LOCALDIR/get-fedora-latest-config" --releasever "$FC_LATEST" --include-testing
+        "$KERNELDIR/get-fedora-latest-config" --releasever "$FC_LATEST" --include-testing
         mv config-base-"$TESTING_KERNEL" config-base
     elif [ "$BRANCH" == "main" ] && { distance_version "$RAWHIDE_KERNEL" "$QUBES_VERSION_TO_UPDATE"; }; then
-        "$LOCALDIR/get-fedora-latest-config" --releasever rawhide
+        "$KERNELDIR/get-fedora-latest-config" --releasever rawhide
         mv config-base-"$RAWHIDE_KERNEL" config-base
     elif distance_version "$STABLE_KERNEL" "$QUBES_VERSION_TO_UPDATE"; then
-        "$LOCALDIR/get-fedora-latest-config" --releasever "$FC_LATEST"
+        "$KERNELDIR/get-fedora-latest-config" --releasever "$FC_LATEST"
         mv config-base-"$STABLE_KERNEL" config-base
     else
         echo "Cannot determine latest config for kernel ${LATEST_KERNEL_VERSION}. Use the current existing config..."
     fi
 
-    if [ -n "$(git diff version)" ]; then
+    if [ -n "$(git -C "$KERNELDIR" diff version)" ]; then
         LATEST_KERNEL_VERSION="$(cat version)"
         HEAD_BRANCH="update-v$QUBES_VERSION_TO_UPDATE"
         git checkout -b "$HEAD_BRANCH"
