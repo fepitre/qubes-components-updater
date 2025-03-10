@@ -47,13 +47,14 @@ exit_launcher() {
 
 trap 'exit_launcher' 0 1 2 3 6 15
 
-QUBES_VERSION_TO_UPDATE="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
-if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
+NEW_VERSION="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
+if [ -n "$NEW_VERSION" ]; then
     git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDERRPMDIR"
     git clone -b "${BRANCH_linux_kernel}" "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}linux-kernel" "$KERNELDIR"
     cd "$KERNELDIR"
 
-    echo "$QUBES_VERSION_TO_UPDATE" > version
+    CURRENT_VERSION="$(cat version)"
+    echo "$NEW_VERSION" > version
     make get-sources
 
     get_config_opts=("--keysdir=$BUILDERRPMDIR/keys" "--kerneldir=$KERNELDIR")
@@ -64,12 +65,12 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
     "$LOCALDIR/get-fedora-latest-config.py" "${get_config_opts[@]}"
 
     if [ -n "$(git -C "$KERNELDIR" diff version)" ]; then
-        LATEST_KERNEL_VERSION="$(cat version)"
-        HEAD_BRANCH="update-v$QUBES_VERSION_TO_UPDATE"
+
+        HEAD_BRANCH="update-v$NEW_VERSION"
         git checkout -b "$HEAD_BRANCH"
         echo 1 >rel
         git add version rel config-base
-        git commit -m "Update to kernel-$QUBES_VERSION_TO_UPDATE"
+        git commit -m "Update to kernel-$NEW_VERSION"
         git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}linux-kernel"
         git push -f -u fork "$HEAD_BRANCH"
 
@@ -79,9 +80,9 @@ if [ -n "$QUBES_VERSION_TO_UPDATE" ]; then
         fi
         git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         git -C ~/linux pull --all
-#        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${QUBES_VERSION_TO_UPDATE}" "${LATEST_KERNEL_VERSION}" > changelog
+#        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${NEW_VERSION}" "${LATEST_KERNEL_VERSION}" > changelog
         printf "<details>\n\nChanges since previous version:\n" > changelog
-        git -C ~/linux log --oneline "v${QUBES_VERSION_TO_UPDATE}..v${LATEST_KERNEL_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
+        git -C ~/linux log --oneline "v${CURRENT_VERSION}..v${NEW_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
         printf "\n\n</details>" >> changelog
 
         "$LOCALDIR/github-updater.py" \
