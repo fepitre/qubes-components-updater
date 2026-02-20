@@ -8,6 +8,7 @@ import tempfile
 import koji
 from pathlib import Path
 from packaging.version import parse as parse_version
+from packaging.version import Version
 
 
 def get_koji_kernel_builds(include_rc, include_testing):
@@ -64,23 +65,20 @@ def get_koji_kernel_builds(include_rc, include_testing):
     return list(latest_builds.values())
 
 
-def is_close_version(target, candidate):
-    t_parts = target.split(".")
-    c_parts = candidate.split(".")
-    return (
-        len(t_parts) == 2
-        and len(c_parts) == 2
-        and t_parts[0] == c_parts[0]
-        and 0 <= int(c_parts[1]) - int(t_parts[1]) <= 1
-    )
+def version_distance(a: str, b: str) -> int:
+    va, vb = Version(a), Version(b)
+    ra, rb = va.release, vb.release
+
+    n = max(len(ra), len(rb))
+
+    ra = ra + (0,) * (n - len(ra))
+    rb = rb + (0,) * (n - len(rb))
+
+    return tuple(abs(x - y) for x, y in zip(ra, rb))
 
 
 def find_closest_build(builds, target_version_str):
-    close_builds = [
-        b for b in builds if is_close_version(target_version_str, b["version"])
-    ]
-    if close_builds:
-        return max(close_builds, key=lambda b: parse_version(b["version"]))
+    return min(builds, key=lambda v: version_distance(target_version_str, v["version"]))
 
 
 def check_signature(rpm_file, key_file, tmpdir):
