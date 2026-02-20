@@ -49,7 +49,7 @@ trap 'exit_launcher' 0 1 2 3 6 15
 
 NEW_VERSION="$("$LOCALDIR"/github-updater.py --repo qubes-linux-kernel --check-update --base "$GIT_UPSTREAM:${BRANCH_linux_kernel:-master}")"
 if [ -n "$NEW_VERSION" ]; then
-    git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builder-rpm" "$BUILDERRPMDIR"
+    git clone "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}builderv2" "$BUILDERRPMDIR"
     git clone -b "${BRANCH_linux_kernel}" "${GIT_BASEURL_UPSTREAM}/${GIT_PREFIX_UPSTREAM}linux-kernel" "$KERNELDIR"
     cd "$KERNELDIR"
 
@@ -57,7 +57,7 @@ if [ -n "$NEW_VERSION" ]; then
     echo "$NEW_VERSION" > version
     make get-sources
 
-    get_config_opts=("--keysdir=$BUILDERRPMDIR/keys" "--kerneldir=$KERNELDIR")
+    get_config_opts=("--keysdir=$BUILDERRPMDIR/qubesbuilder/plugins/chroot_rpm/keys" "--kerneldir=$KERNELDIR")
     if [ "$BRANCH" == "main" ]; then
         get_config_opts+=("--include-testing")
     fi
