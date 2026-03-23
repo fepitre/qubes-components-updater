@@ -78,7 +78,14 @@ def version_distance(a: str, b: str) -> int:
 
 
 def find_closest_build(builds, target_version_str):
-    return min(builds, key=lambda v: version_distance(target_version_str, v["version"]))
+    target_xy = Version(target_version_str).release[:2]
+    not_newer = [
+        b for b in builds
+        if Version(b["version"]).release[:2] <= target_xy
+    ]
+    if not not_newer:
+        return None
+    return min(not_newer, key=lambda v: version_distance(target_version_str, v["version"]))
 
 
 def check_signature(rpm_file, key_file, tmpdir):
