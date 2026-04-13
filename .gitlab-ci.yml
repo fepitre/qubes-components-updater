@@ -5,8 +5,18 @@ workflow:
    - when: always
 
 variables:
-  DEBUG: 1
-  FETCH_CMD: curl --proto '=https' --proto-redir '=https' --tlsv1.2 --http1.1 -sSfL -o
+  CI_RUN_COMPONENTS_JOBS:
+    value: "0"
+    description: "Set to 1 to actually run component update jobs (kernel, pulseaudio-headers, etc.)"
+  GITHUB_API_TOKEN:
+    value: ""
+    description: "GitHub API token used to check for updates and open pull requests"
+  DEBUG:
+    value: "1"
+    description: "Enable shell trace output (set -x) in updater scripts"
+  FETCH_CMD:
+    value: "curl --proto '=https' --proto-redir '=https' --tlsv1.2 --http1.1 -sSfL -o"
+    description: "curl invocation used to download files in updater scripts"
 
 default:
   tags:
