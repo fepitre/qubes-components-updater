@@ -76,10 +76,10 @@ if [ -n "$NEW_VERSION" ]; then
 
         # use local git for changelog
         if [ ! -e ~/linux ]; then
-            git -C ~/ clone --filter=blob:none https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+            git -C ~/ clone --filter=blob:none https://github.com/gregkh/linux.git
         fi
-        git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
-        git -C ~/linux pull --all
+        git -C ~/linux remote set-url origin https://github.com/gregkh/linux.git
+        git -C ~/linux fetch --filter=blob:none origin '+refs/tags/*:refs/tags/*'
 #        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${NEW_VERSION}" "${LATEST_KERNEL_VERSION}" > changelog
         printf "<details>\n\nChanges since previous version:\n" > changelog
         git -C ~/linux log --oneline "v${CURRENT_VERSION}..v${NEW_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
