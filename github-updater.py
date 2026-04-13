@@ -84,6 +84,16 @@ class UpdaterClient(Github):
             ):
                 return version_upstream
 
+    def get_changelog(self, from_tag, to_tag):
+        # GitHub compare API caps at 250 commits; sufficient for stable point releases.
+        comparison = self.repo.compare(from_tag, to_tag)
+        lines = []
+        for commit in comparison.commits:
+            sha = commit.sha[:12]
+            subject = commit.commit.message.split("\n")[0]
+            lines.append(f"{self.repo.full_name}@{sha} {subject}")
+        return lines
+
     def create_pullrequest(self, base, head, version=None, changelog=None):
         if not self.is_autopr_present(version):
             # example of head: 'fepitre:v4.19.30'
@@ -128,6 +138,9 @@ def parse_args(argv):
     parser.add_argument("--head", required=False)
     parser.add_argument("--version", required=False)
     parser.add_argument("--changelog", required=False)
+    parser.add_argument("--get-changelog", required=False, action="store_true")
+    parser.add_argument("--from-tag", required=False)
+    parser.add_argument("--to-tag", required=False)
 
     args = parser.parse_args(argv[1:])
 
@@ -150,6 +163,10 @@ def main(argv):
     client = UpdaterClient(
         account=account, repo=args.repo, branch=branch, token=token
     )
+
+    if args.get_changelog and args.from_tag and args.to_tag:
+        for line in client.get_changelog(args.from_tag, args.to_tag):
+            print(line)
 
     if args.check_update:
         is_update_needed = client.is_update_needed()

@@ -74,15 +74,12 @@ if [ -n "$NEW_VERSION" ]; then
         git remote add fork "${GIT_BASEURL_FORK}${GIT_PREFIX_FORK}linux-kernel"
         git push -f -u fork "$HEAD_BRANCH"
 
-        # use local git for changelog
-        if [ ! -e ~/linux ]; then
-            git -C ~/ clone --filter=blob:none https://github.com/gregkh/linux.git
-        fi
-        git -C ~/linux remote set-url origin https://github.com/gregkh/linux.git
-        git -C ~/linux fetch --filter=blob:none origin '+refs/tags/*:refs/tags/*'
-#        printf "<details>\n\n[Changes since previous version](https://github.com/gregkh/linux/compare/v%s...v%s):\n" "${NEW_VERSION}" "${LATEST_KERNEL_VERSION}" > changelog
         printf "<details>\n\nChanges since previous version:\n" > changelog
-        git -C ~/linux log --oneline "v${CURRENT_VERSION}..v${NEW_VERSION}" --pretty='format:gregkh/linux@%h %s' >> changelog
+        "$LOCALDIR/github-updater.py" \
+            --get-changelog \
+            --base "gregkh:linux" \
+            --from-tag "v${CURRENT_VERSION}" \
+            --to-tag "v${NEW_VERSION}" >> changelog
         printf "\n\n</details>" >> changelog
 
         "$LOCALDIR/github-updater.py" \
