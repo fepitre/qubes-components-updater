@@ -76,7 +76,7 @@ if [ -n "$NEW_VERSION" ]; then
 
         # use local git for changelog
         if [ ! -e ~/linux ]; then
-            git -C ~/ clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+            git -C ~/ clone --filter=blob:none https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         fi
         git -C ~/linux remote set-url origin https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         git -C ~/linux pull --all
