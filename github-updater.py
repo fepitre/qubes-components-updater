@@ -160,13 +160,21 @@ def main(argv):
         print(f'An error occurred while parsing "repo:branch" from {args.base}')
         return 1
 
+    # --get-changelog: --base is owner:repo (not owner:branch).
+    # Handle before constructing UpdaterClient which requires a branch.
+    if args.get_changelog and args.from_tag and args.to_tag:
+        g = Github(login_or_token=token)
+        repo = g.get_repo(f"{account}/{branch}")
+        comparison = repo.compare(args.from_tag, args.to_tag)
+        for commit in comparison.commits:
+            sha = commit.sha[:12]
+            subject = commit.commit.message.split("\n")[0]
+            print(f"{repo.full_name}@{sha} {subject}")
+        return 0
+
     client = UpdaterClient(
         account=account, repo=args.repo, branch=branch, token=token
     )
-
-    if args.get_changelog and args.from_tag and args.to_tag:
-        for line in client.get_changelog(args.from_tag, args.to_tag):
-            print(line)
 
     if args.check_update:
         is_update_needed = client.is_update_needed()
