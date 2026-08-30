@@ -79,11 +79,6 @@ linux-6.1:
   variables:
     BRANCH_linux_kernel: "stable-6.1"
 
-linux-5.15:
-  extends: .kernel-job
-  variables:
-    BRANCH_linux_kernel: "stable-5.15"
-
 ### pulseaudio-headers
 
 pulseaudio-headers:
