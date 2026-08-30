@@ -49,7 +49,7 @@ stages:
 .kernel-job:
   extends: .component-job
   before_script:
-    - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab bison flex python3-koji
+    - sudo dnf install -y python3-requests python3-packaging python3-pygithub python3-jwt python3-gitlab bison flex python3-koji gnupg2
   script: ./kernel-updater.sh
 #  needs:
 #    - linux-clone

@@ -58,7 +58,7 @@ if [ -n "$NEW_VERSION" ]; then
     make get-sources
 
     get_config_opts=("--keysdir=$BUILDERRPMDIR/qubesbuilder/plugins/chroot_rpm/keys" "--kerneldir=$KERNELDIR")
-    if [ "$BRANCH" == "main" ]; then
+    if [ "$BRANCH_linux_kernel" == "main" ]; then
         get_config_opts+=("--include-testing")
     fi
 
