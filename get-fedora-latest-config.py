@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -107,19 +108,37 @@ def candidate_builds(session, releases, target_version, opts):
     return candidates
 
 
-def signed_rpm_location(session, build, keys, package="kernel-core"):
+def rpm_sources(session, build, keys, package="kernel-core"):
     rpms = session.listRPMs(buildID=build["build_id"], arches=["x86_64"])
     rpm = next((r for r in rpms if r["name"] == package), None)
     if rpm is None:
-        return None, None, None
+        return None
     pathinfo = koji.PathInfo(topdir=KOJI_TOPURL)
+    build_dir = pathinfo.build(build)
     for sig in session.queryRPMSigs(rpm_id=rpm["id"]):
         sigkey = (sig["sigkey"] or "").lower()
         key_file = keys.get(sigkey)
-        if key_file is not None:
-            url = f"{pathinfo.build(build)}/{pathinfo.signed(rpm, sigkey)}"
-            return url, key_file, f"{rpm['nvr']}.{rpm['arch']}"
-    return None, None, None
+        if key_file is None:
+            continue
+        return {
+            "nvra": f"{rpm['nvr']}.{rpm['arch']}",
+            "key_file": key_file,
+            "signed": f"{build_dir}/{pathinfo.signed(rpm, sigkey)}",
+            "unsigned": f"{build_dir}/{pathinfo.rpm(rpm)}",
+            "sighdr": f"{build_dir}/{pathinfo.sighdr(rpm, sigkey)}",
+        }
+    return None
+
+
+def url_exists(url):
+    request = urllib.request.Request(url, method="HEAD")
+    try:
+        with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT):
+            return True
+    except urllib.error.HTTPError as err:
+        if err.code == 404:
+            return False
+        raise
 
 
 def download(url, dest):
@@ -129,8 +148,9 @@ def download(url, dest):
 
 
 def check_signature(rpm_file, key_file, tmpdir):
-    rpmdb = tmpdir / "rpmdb"
-    rpmdb.mkdir(exist_ok=True)
+    rpmdb = tmpdir / f"rpmdb-{key_file.name}"
+    shutil.rmtree(rpmdb, ignore_errors=True)
+    rpmdb.mkdir(parents=True)
     subprocess.run(
         ["rpmkeys", "--dbpath", str(rpmdb), "--import", str(key_file)],
         check=True,
@@ -158,16 +178,30 @@ def extract_config_from_rpm(rpm_file):
     return result.stdout
 
 
-def fetch_config(session, build, keys, tmpdir):
-    url, key_file, nvra = signed_rpm_location(session, build, keys)
-    if url is None:
-        raise Exception("no signed kernel-core we hold a key for")
-    rpm_file = tmpdir / f"{nvra}.rpm.untrusted"
-    download(url, rpm_file)
-    check_signature(rpm_file, key_file, tmpdir)
+def fetch_rpm(source, tmpdir):
+    # Koji keeps a whole signed rpm only for some builds, mostly archived ones.
+    # Everywhere else it serves the unsigned rpm and the detached signature
+    # header, which splice back into the signed rpm the build system published.
+    dest = tmpdir / f"{source['nvra']}.rpm.untrusted"
+    if url_exists(source["signed"]):
+        download(source["signed"], dest)
+        return dest
+    unsigned = tmpdir / f"{source['nvra']}.rpm.unsigned"
+    sighdr = tmpdir / f"{source['nvra']}.sighdr"
+    download(source["unsigned"], unsigned)
+    download(source["sighdr"], sighdr)
+    koji.splice_rpm_sighdr(sighdr.read_bytes(), str(unsigned), str(dest))
+    unsigned.unlink()
+    sighdr.unlink()
+    return dest
+
+
+def fetch_config(source, tmpdir):
+    rpm_file = fetch_rpm(source, tmpdir)
+    check_signature(rpm_file, source["key_file"], tmpdir)
     config = extract_config_from_rpm(rpm_file)
     rpm_file.unlink()
-    return config, nvra
+    return config
 
 
 def extract_kernel_sources(archive_path, extract_dir):
@@ -249,12 +283,20 @@ def main():
     candidates = candidate_builds(session, releases, kernelver, args)
 
     print(f"Target kernel version: {kernelver}")
-    print("Fedora candidates, best first:")
-    for build in candidates:
-        print(f"  f{build['fedora_release']:<3} {build['nvr']}")
     if not candidates:
         print("No Fedora kernel config for this version, keeping current one")
         return
+
+    # Every Fedora branch carrying the best kernel is an equivalent source, so
+    # they cover for each other. Anything below is a different kernel and would
+    # silently land a config nobody asked for, better to fail the update.
+    best_version = candidates[0]["version"]
+    eligible = [b for b in candidates if b["version"] == best_version]
+
+    print("Fedora candidates, best first:")
+    for build in candidates:
+        mark = "*" if build["version"] == best_version else " "
+        print(f" {mark} f{build['fedora_release']:<3} {build['nvr']}")
 
     tmp_base = Path.home() / "tmp"
     tmp_base.mkdir(parents=True, exist_ok=True)
@@ -264,25 +306,39 @@ def main():
         tmpdir = Path(tmpdirname)
 
         chosen = None
-        for build in candidates:
+        for build in eligible:
+            source = rpm_sources(session, build, keys)
+            if source is None:
+                print(
+                    f"Skipping {build['nvr']}: no signed kernel-core",
+                    file=sys.stderr,
+                )
+                continue
             if args.dry_run:
-                url, key_file, nvra = signed_rpm_location(session, build, keys)
-                if url is None:
-                    print(f"Skipping {build['nvr']}: no signed kernel-core")
-                    continue
-                print(f"Would use {nvra}\n  url: {url}\n  key: {key_file}")
+                print(f"Would use {source['nvra']}")
+                if url_exists(source["signed"]):
+                    print(f"  url: {source['signed']}")
+                else:
+                    print(f"  rpm: {source['unsigned']}")
+                    print(f"  sig: {source['sighdr']}")
+                print(f"  key: {source['key_file']}")
                 return
             try:
-                config_content, nvra = fetch_config(
-                    session, build, keys, tmpdir
-                )
-                chosen = build
+                config_content = fetch_config(source, tmpdir)
+                chosen, nvra = build, source["nvra"]
                 break
             except Exception as e:
                 print(f"Skipping {build['nvr']}: {e}", file=sys.stderr)
 
         if chosen is None:
-            raise Exception("No usable Fedora kernel config could be fetched")
+            fallback = next(
+                (b["nvr"] for b in candidates if b["version"] != best_version),
+                "nothing",
+            )
+            raise Exception(
+                f"no usable Fedora build for kernel {best_version}, "
+                f"refusing to fall back to {fallback}"
+            )
 
         print(f"Using {nvra}")
 
